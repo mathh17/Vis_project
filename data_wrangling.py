@@ -2,8 +2,9 @@
 """
 Created on Fri Dec  3 11:10:10 2021''
 
-@author: jakob
+@author: Konsulenten
 """
+#%%
 #import libraries
 import pandas as pd
 
@@ -21,3 +22,11 @@ df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
 
 
 
+
+# %%
+df.dropna(inplace=True)
+#%%
+df[['Cr_city', 'Cr_country']] = df['Crash_location'].str.split(', ', 1, expand=True)
+df[['Cr_region', 'Cr_country']] = df['Cr_country'].str.split(', ', 1, expand=True)
+df = df.drop(columns= ['Crash_location','Route'])
+# %%
