@@ -6,7 +6,10 @@ Created on Fri Dec  3 11:10:10 2021''
 """
 #%%
 #import libraries
+from numpy.lib.function_base import append
 import pandas as pd
+import pycountry 
+
 
 #Load data
 df = pd.read_excel('crashes.xlsx')
@@ -19,16 +22,38 @@ df = df.drop(columns="Cn_ln")
 #df[['From', 'To']] = df['Route'].str.split(' - ', 1, expand=True)
 #split month and data 'Date' into 'Month' and 'Date'--last replacing the origin
 #df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
+# %%
+#
+df.dropna(inplace=True)
 
+#%%
+country_list = []
+iso_list = []
+country_df = pd.DataFrame(columns=['country','ISO'])
+for i in pycountry.countries:
+    country_list.append(i.name)
+    iso_list.append(i.alpha_2)
+
+country_df['country'] = country_list
+country_df['ISO'] = iso_list
+#%%
+df_iterrated = pd.DataFrame(columns=df.columns)
+crash_ISO = []
+crash_country = []
+for row_df, index_df in df.iterrows():
+    for row, index in country_df.iterrows():
+        if index['country'] in str(index_df['Crash_location']):
+            crash_ISO.append(index['ISO'])
+            crash_country.append(index['country'])
+            df_iterrated.append(index_df, ignore_index=True)
+        if index['ISO'] in str(index_df['Crash_location']):
+            crash_ISO.append(index['ISO'])
+            crash_country.append(index['country'])
+            df_iterrated.append(index_df, ignore_index=True)
 
 #%%
 
 
-
-
-# %%
-#
-df.dropna(inplace=True)
 #%%
 #
 df[['Cr_city', 'Cr_country']] = df['Crash_location'].str.split(', ', 1, expand=True)
@@ -40,14 +65,10 @@ df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
 
 df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
 #%%
-import pycountry 
 countries = []
 countries.append(pycountry.countries)
 
 print(countries)
-
-
-
 
 #%%
 #Print statement for all collumn uniques and count of number of collumn variables
