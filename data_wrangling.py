@@ -33,7 +33,21 @@ df.dropna(inplace=True)
 #
 df[['Cr_city', 'Cr_country']] = df['Crash_location'].str.split(', ', 1, expand=True)
 df[['Cr_region', 'Cr_country']] = df['Cr_country'].str.split(', ', 1, expand=True)
+
+
+#%%
 df = df.drop(columns= ['Crash_location','Route'])
+
+#%%
+import pycountry 
+countries = []
+countries.append(pycountry.countries)
+
+print(countries)
+
+
+
+
 #%%
 #Print statement for all collumn uniques and count of number of collumn variables
 for col in df:
