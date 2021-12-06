@@ -20,4 +20,7 @@ df[['To', 'From']] = df['Route'].str.split(' - ', 1, expand=True)
 df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
 
 
+#%%
+
+
 
