@@ -16,9 +16,9 @@ df = df.drop(columns="Registration")
 df = df.drop(columns="Cn_ln")
 
 #Split colum 'route' and create two new 'from', 'to'
-df[['To', 'From']] = df['Route'].str.split(' - ', 1, expand=True)
+#df[['From', 'To']] = df['Route'].str.split(' - ', 1, expand=True)
 #split month and data 'Date' into 'Month' and 'Date'--last replacing the origin
-df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
+#df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
 
 
 #%%
@@ -33,7 +33,12 @@ df.dropna(inplace=True)
 #
 df[['Cr_city', 'Cr_country']] = df['Crash_location'].str.split(', ', 1, expand=True)
 df[['Cr_region', 'Cr_country']] = df['Cr_country'].str.split(', ', 1, expand=True)
-df = df.drop(columns= ['Crash_location','Route'])
+df[['total_passengers_num','passengers_alive','crew_alive']] = df['Passenegrs_num'].str.split('Â', expand=True)
+df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
+df['crew_alive'] = df['crew_alive'].str.split(':').str[-1]
+df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
+
+df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
 #%%
 #Print statement for all collumn uniques and count of number of collumn variables
 for col in df:
