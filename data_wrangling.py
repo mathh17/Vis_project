@@ -36,22 +36,38 @@ for i in pycountry.countries:
 
 country_df['country'] = country_list
 country_df['ISO'] = iso_list
-#%%
-df_iterrated = pd.DataFrame(columns=df.columns)
-crash_ISO = []
-crash_country = []
-for row_df, index_df in df.iterrows():
-    for row, index in country_df.iterrows():
-        if index['country'] in str(index_df['Crash_location']):
-            crash_ISO.append(index['ISO'])
-            crash_country.append(index['country'])
-            df_iterrated.append(index_df, ignore_index=True)
-        if index['ISO'] in str(index_df['Crash_location']):
-            crash_ISO.append(index['ISO'])
-            crash_country.append(index['country'])
-            df_iterrated.append(index_df, ignore_index=True)
+
+
 
 #%%
+valid_index = []
+crash_ISO = []
+crash_country = []
+i = 0
+
+for index_df, row_df in df.iterrows():
+    #print(i)
+    for index, row in country_df.iterrows():
+        if row['country'] in str(row_df['Crash_location']):
+            crash_ISO.append(row['ISO'])
+            crash_country.append(row['country'])
+            valid_index.append(i)
+            print('NAME activated INDEX:',index_df)
+            break
+        elif row['ISO'] in str(row_df['Crash_location']):
+            crash_ISO.append(row['ISO'])
+            crash_country.append(row['country'])
+            valid_index.append(i)
+            print('ISO activated INDEX:',index_df)
+            break
+    i +=1
+print(valid_index)
+
+
+#%%
+
+
+
 
 
 #%%
