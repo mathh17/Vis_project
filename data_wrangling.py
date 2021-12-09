@@ -9,6 +9,7 @@ Created on Fri Dec  3 11:10:10 2021''
 from numpy.lib.function_base import append
 import pandas as pd
 import pycountry 
+import numpy as np
 
 
 #Load data
@@ -24,7 +25,7 @@ df = df.drop(columns="Cn_ln")
 #df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
 # %%
 #
-df.dropna(inplace=True)
+#df.dropna(inplace=True)
 
 #%%
 country_list = []
@@ -34,12 +35,120 @@ for i in pycountry.countries:
     country_list.append(i.name)
     iso_list.append(i.alpha_2)
 
+#Alterations of incorrect country names
+country_list[13] = 'Antigua'
+country_list[20] = 'Netherlands Antilles'
+country_list[26] = 'Bosnia'
+country_list[31] = 'Bolivia'
+country_list[34] = 'Brunei'
+country_list[40] = 'Cocos Islands'
+country_list[44] = 'Ivory Coast'
+country_list[46] = 'Democratic Republic Congo'
+country_list[54] = 'Curacao'
+country_list[58] = 'Czechoslovakia'
+country_list[77] = 'Micronesia'
+country_list[107] = 'Iran'
+country_list[122] = 'South Korea'
+country_list[144] = 'Macedonia'
+country_list[181] = 'North Korea'
+country_list[184] = 'Palestine'
+country_list[189] = 'Russia'
+country_list[214] = 'Syria'
+country_list[222] = 'Timor'
+country_list[224] = 'Trinidad'
+country_list[228] = 'Taiwan'
+country_list[229] = 'Tanzania'
+country_list[238] = 'Venezuela'
+country_list[241] = 'Vietnam'
+
+
+#Create Country and ISO dataframe
 country_df['country'] = country_list
 country_df['ISO'] = iso_list
 
 
+####
+country_df = country_df.sort_values(by='country',ascending=False)
+
+
 
 #%%
+# Iterate and get crash country name and ISO code. Append to df. 
+###
+
+valid_index = []
+crash_ISO = []
+crash_country = []
+i = 0
+
+dfc = df.copy(deep=True)
+
+
+for index_df, row_df in dfc.iterrows():
+    nan_applier = True
+    #print(i)
+    for index, row in country_df.iterrows():
+        if row['country'] in str(row_df['Crash_location']).replace(',', ''):
+            crash_ISO.append(row['ISO'])
+            crash_country.append(row['country'])
+            valid_index.append(i)
+            print('NAME activated INDEX:',index_df)
+            nan_applier = False
+            break
+        else:
+            word_list = []
+            e = 0
+            sentence = str(row_df['Crash_location']).replace(',', '')
+            word_list.append(sentence.split(' '))
+            if row['ISO'] in word_list:                
+                crash_ISO.append(row['ISO'])
+                crash_country.append(row['country'])
+                valid_index.append(i)
+                print('ISO activated INDEX:',index_df)
+                nan_applier = False
+                break
+    if nan_applier == True:        
+        crash_ISO.append(None)
+        crash_country.append(None)
+        valid_index.append(None)
+    
+    i +=1
+print(valid_index)
+
+dfc['Crash_country'] = crash_country
+dfc['Crash_ ISO'] = crash_ISO
+
+
+
+#%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#%%
+# The old loop, MAthias x Jakob
+###
 valid_index = []
 crash_ISO = []
 crash_country = []
@@ -48,13 +157,13 @@ i = 0
 for index_df, row_df in df.iterrows():
     #print(i)
     for index, row in country_df.iterrows():
-        if row['country'] in str(row_df['Crash_location']):
+        if row['country'] in str(row_df['Crash_location']).replace(',', ''):
             crash_ISO.append(row['ISO'])
             crash_country.append(row['country'])
             valid_index.append(i)
             print('NAME activated INDEX:',index_df)
             break
-        elif row['ISO'] in str(row_df['Crash_location']):
+        elif row['ISO'] in str(row_df['Crash_location']).replace(',', ''):
             crash_ISO.append(row['ISO'])
             crash_country.append(row['country'])
             valid_index.append(i)
@@ -62,11 +171,6 @@ for index_df, row_df in df.iterrows():
             break
     i +=1
 print(valid_index)
-
-
-#%%
-
-
 
 
 
