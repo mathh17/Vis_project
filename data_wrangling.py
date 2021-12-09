@@ -5,12 +5,10 @@ Created on Fri Dec  3 11:10:10 2021''
 @author: Konsulenten
 """
 #%%
+
 #import libraries
-from numpy.lib.function_base import append
 import pandas as pd
 import pycountry 
-import numpy as np
-
 
 #Load data
 df = pd.read_excel('crashes.xlsx')
@@ -19,15 +17,16 @@ df = pd.read_excel('crashes.xlsx')
 df = df.drop(columns="Registration")
 df = df.drop(columns="Cn_ln")
 
-#Split colum 'route' and create two new 'from', 'to'
-#df[['From', 'To']] = df['Route'].str.split(' - ', 1, expand=True)
-#split month and data 'Date' into 'Month' and 'Date'--last replacing the origin
-#df[['Month', 'Date']] = df['Date'].str.split(' ', 1, expand=True)
-# %%
-#
-#df.dropna(inplace=True)
+
 
 #%%
+# Mutate data in df to eliminate undesireable notations
+
+
+
+
+#%%
+# Create country list, mutate countries spelled undesireable
 country_list = []
 iso_list = []
 country_df = pd.DataFrame(columns=['country','ISO'])
@@ -61,73 +60,79 @@ country_list[229] = 'Tanzania'
 country_list[238] = 'Venezuela'
 country_list[241] = 'Vietnam'
 
-
-#Create Country and ISO dataframe
+# Create Country and ISO dataframe
 country_df['country'] = country_list
 country_df['ISO'] = iso_list
 
-
-####
+# Sort country-ISO dataframe descending
 country_df = country_df.sort_values(by='country',ascending=False)
 
 
 
 #%%
-# Iterate and get crash country name and ISO code. Append to df. 
-###
-
-valid_index = []
-crash_ISO = []
-crash_country = []
-i = 0
-
-dfc = df.copy(deep=True)
-
-
-for index_df, row_df in dfc.iterrows():
-    nan_applier = True
-    #print(i)
-    for index, row in country_df.iterrows():
-        if row['country'] in str(row_df['Crash_location']).replace(',', ''):
-            crash_ISO.append(row['ISO'])
-            crash_country.append(row['country'])
-            valid_index.append(i)
-            print('NAME activated INDEX:',index_df)
-            nan_applier = False
-            break
-        else:
-            word_list = []
-            e = 0
-            sentence = str(row_df['Crash_location']).replace(',', '')
-            word_list.append(sentence.split(' '))
-            if row['ISO'] in word_list:                
-                crash_ISO.append(row['ISO'])
-                crash_country.append(row['country'])
-                valid_index.append(i)
-                print('ISO activated INDEX:',index_df)
-                nan_applier = False
-                break
-    if nan_applier == True:        
-        crash_ISO.append(None)
-        crash_country.append(None)
-        valid_index.append(None)
-    
-    i +=1
-print(valid_index)
-
-dfc['Crash_country'] = crash_country
-dfc['Crash_ ISO'] = crash_ISO
+# Dataframe for all cities with population above 15.000
+city_list = pd.read_csv('cities_of_the_world.csv')
 
 
 
 #%%
+# Function: 
+#    Iterate and get crash country name and ISO code. Append to df. 
+###
+
+def country_ISO_miner(data, country_iso_df, col_target):
+    data_copy = data.copy()
+    ISO_list = []
+    country_list = []
+    
+    
+    for index_df, row_df in data_copy.iterrows():
+        nan_applier = True
+        
+        for index, row in country_iso_df.iterrows():
+            if row['country'] in str(row_df[col_target]).replace(',', ''):
+                ISO_list.append(row['ISO'])
+                country_list.append(row['country'])
+                print('NAME activated INDEX:',index_df)
+                nan_applier = False
+                break
+            
+            else:
+                word_list = []
+                sentence = str(row_df[col_target]).replace(',', '')
+                word_list.append(sentence.split(' '))
+                
+                if row['ISO'] in word_list:                
+                    ISO_list.append(row['ISO'])
+                    country_list.append(row['country'])
+                    print('ISO activated INDEX:',index_df)
+                    nan_applier = False
+                    break
+                
+        if nan_applier == True:        
+            ISO_list.append(None)
+            country_list.append(None)
+            
+    
+    country_col_name = col_target + '_country'
+    ISO_col_name = col_target + '_ISO'
+    
+    data_copy[country_col_name] = country_list
+    data_copy[ISO_col_name] = ISO_list
+    
+    
+    return data_copy
 
 
 
+#%%
+# Split crash_site in ISO and country, append to df
+
+df = country_ISO_miner(df, country_df, 'Crash_location')
 
 
 
-
+#%%
 
 
 
@@ -172,6 +177,50 @@ for index_df, row_df in df.iterrows():
     i +=1
 print(valid_index)
 
+
+#%%
+
+valid_index = []
+crash_ISO = []
+crash_country = []
+i = 0
+
+dfc = df.copy(deep=True)
+
+
+for index_df, row_df in dfc.iterrows():
+    nan_applier = True
+    #print(i)
+    for index, row in country_df.iterrows():
+        if row['country'] in str(row_df['Crash_location']).replace(',', ''):
+            crash_ISO.append(row['ISO'])
+            crash_country.append(row['country'])
+            valid_index.append(i)
+            print('NAME activated INDEX:',index_df)
+            nan_applier = False
+            break
+        else:
+            word_list = []
+            #e=0
+            sentence = str(row_df['Crash_location']).replace(',', '')
+            word_list.append(sentence.split(' '))
+            if row['ISO'] in word_list:                
+                crash_ISO.append(row['ISO'])
+                crash_country.append(row['country'])
+                valid_index.append(i)
+                print('ISO activated INDEX:',index_df)
+                nan_applier = False
+                break
+    if nan_applier == True:        
+        crash_ISO.append(None)
+        crash_country.append(None)
+        valid_index.append(None)
+    
+    i +=1
+print(valid_index)
+
+dfc['Crash_country'] = crash_country
+dfc['Crash_ ISO'] = crash_ISO
 
 
 #%%
