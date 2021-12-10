@@ -128,6 +128,7 @@ def country_ISO_miner(data, country_iso_df, col_target):
     
     return data_copy
 
+#Splits the columns of [onboard_alive,onboard_fatalities_num] into three new columns for both of them, total, passengers and crew
 def passenger_splitter(df):
     df[['total_passengers_num','passengers_alive','crew_alive']] = df['onboard_alive'].str.split('Â', expand=True)
     df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
@@ -146,15 +147,8 @@ df = country_ISO_miner(df, country_df, 'Crash_location')
 df.dropna(inplace=True)
 
 #%%
+# Call the function for splitting passengers alive dataframes and dead into seperate columns
 df = passenger_splitter(df)
-
-
-#%%
-
-df[['total_passengers_num','passengers_alive','crew_alive']] = df['passengers_alive'].str.split('Â', expand=True)
-df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
-df['crew_alive'] = df['crew_alive'].str.split(':').str[-1]
-df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
 #%%
 
 
