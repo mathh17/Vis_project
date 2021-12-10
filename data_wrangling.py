@@ -64,6 +64,11 @@ country_list[241] = 'Vietnam'
 country_df['country'] = country_list
 country_df['ISO'] = iso_list
 
+# Tilføjer amrikanske stater til country og ISO list + District of Columbia
+state_names = pd.DataFrame([["Alaska", 'US'], ["Alabama", 'US'], ["Arkansas", 'US'], ["Arizona", 'US'], ["California", 'US'], ["Colorado", 'US'], ["Connecticut", 'US'], ["D.C.", 'US'], ["Delaware", 'US'], ["Florida", 'US'], ["Georgia", 'US'], ["Hawaii", 'US'], ["Iowa", 'US'], ["Idaho", 'US'], ["Illinois", 'US'], ["Indiana", 'US'], ["Kansas", 'US'], ["Kentucky", 'US'], ["Louisiana", 'US'], ["Massachusetts", 'US'], ["Maryland", 'US'], ["Maine", 'US'], ["Michigan", 'US'], ["Minnesota", 'US'], ["Missouri", 'US'], ["Mississippi", 'US'], ["Montana", 'US'], ["North Carolina", 'US'], ["North Dakota", 'US'], ["Nebraska", 'US'], ["New Hampshire", 'US'], ["New Jersey", 'US'], ["New Mexico", 'US'], ["Nevada", 'US'], ["New York", 'US'], ["Ohio", 'US'], ["Oklahoma", 'US'], ["Oregon", 'US'], ["Pennsylvania", 'US'], ["Rhode Island", 'US'], ["South Carolina", 'US'], ["South Dakota", 'US'], ["Tennessee", 'US'], ["Texas", 'US'], ["Utah", 'US'], ["Virginia", 'US'], ["Vermont", 'US'], ["Washington", 'US'], ["Wisconsin", 'US'], ["West Virginia", 'US'], ["Wyoming", 'US']], columns=['country', 'ISO'])
+
+country_df = country_df.append(state_names)
+
 # Sort country-ISO dataframe descending
 country_df = country_df.sort_values(by='country',ascending=False)
 
