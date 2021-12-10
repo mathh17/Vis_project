@@ -17,12 +17,8 @@ df = pd.read_excel('crashes.xlsx')
 df = df.drop(columns="Registration")
 df = df.drop(columns="Cn_ln")
 
-
-
 #%%
 # Mutate data in df to eliminate undesireable notations
-
-
 
 
 #%%
@@ -76,7 +72,10 @@ country_df = country_df.sort_values(by='country',ascending=False)
 
 #%%
 # Dataframe for all cities with population above 15.000
-city_list = pd.read_csv('cities_of_the_world.csv')
+cities_list = pd.read_csv('cities5000.txt', sep="\t", header=None)
+cities_list = cities_list[[1,4,5,8]]
+cities_list.columns=['city_name','longitude','latitude','ISO']
+
 
 
 
@@ -128,6 +127,40 @@ def country_ISO_miner(data, country_iso_df, col_target):
     
     return data_copy
 
+def city_miner(data, cities_list, col_target):
+    data_copy = data.copy()
+    city_list = []
+    long_list = []
+    lat_list = []
+    
+    for index_df, row_df in data_copy.iterrows():
+        nan_applier = True
+        for index, row in cities_list.iterrows():
+            if row['city_name'] in str(row_df[col_target]).replace(',', ''):
+                if row['ISO'] == row_df['Crash_location_ISO']:
+                    city_list.append(row['city_name'])
+                    long_list.append(row['longitude'])
+                    lat_list.append(row['latitude'])
+                    nan_applier = False
+                    break
+        if nan_applier == True:        
+            city_list.append(None)
+            long_list.append(None)
+            lat_list.append(None)
+            
+    
+    city_col_name = col_target + '_city'
+    long_col_name = col_target + '_city_longitude'
+    lati_col_name = col_target + '_city_latitude'
+
+    data_copy[city_col_name] = city_list
+    data_copy[long_col_name] = long_list
+    data_copy[lati_col_name] = lat_list
+    
+    
+    return data_copy
+
+
 #Splits the columns of [onboard_alive,onboard_fatalities_num] into three new columns for both of them, total, passengers and crew
 def passenger_splitter(df):
     df[['total_passengers_num','passengers_alive','crew_alive']] = df['onboard_alive'].str.split('Â', expand=True)
@@ -144,6 +177,9 @@ def passenger_splitter(df):
 # Split crash_site in ISO and country, append to df and drop na values
 df['Crash_location'].replace('USSR','Russia')
 df = country_ISO_miner(df, country_df, 'Crash_location')
+
+#%%
+df = city_miner(df, cities_list, 'Crash_location')
 df.dropna(inplace=True)
 
 #%%
