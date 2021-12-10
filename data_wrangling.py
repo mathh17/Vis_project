@@ -72,7 +72,7 @@ country_df = country_df.sort_values(by='country',ascending=False)
 
 #%%
 # Dataframe for all cities with population above 15.000
-cities_list = pd.read_csv('cities5000.txt', sep="\t", header=None)
+cities_list = pd.read_csv('cities15000.txt', sep="\t", header=None)
 cities_list = cities_list[[1,4,5,8]]
 cities_list.columns=['city_name','longitude','latitude','ISO']
 
@@ -137,12 +137,16 @@ def city_miner(data, cities_list, col_target):
         nan_applier = True
         for index, row in cities_list.iterrows():
             if row['city_name'] in str(row_df[col_target]).replace(',', ''):
+                print(row['city_name'])
                 if row['ISO'] == row_df['Crash_location_ISO']:
+                    print(row['ISO'])
                     city_list.append(row['city_name'])
                     long_list.append(row['longitude'])
                     lat_list.append(row['latitude'])
                     nan_applier = False
+        
                     break
+        print('next')
         if nan_applier == True:        
             city_list.append(None)
             long_list.append(None)
