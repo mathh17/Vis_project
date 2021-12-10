@@ -123,21 +123,34 @@ def country_ISO_miner(data, country_iso_df, col_target):
     
     return data_copy
 
-
+def passenger_splitter(df):
+    df[['total_passengers_num','passengers_alive','crew_alive']] = df['onboard_alive'].str.split('Â', expand=True)
+    df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
+    df['crew_alive'] = df['crew_alive'].str.split(':').str[-1]
+    df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
+    df[['total_passengers_dead','passengers_dead','crew_dead']] = df['Onboard_fatalities_num'].str.split('Â', expand=True)
+    df['passengers_dead'] = df['passengers_dead'].str.split(':').str[-1]
+    df['crew_dead'] = df['crew_dead'].str.split(':').str[-1]
+    df['crew_dead'] = df['crew_dead'].str.split(')').str[0]
+    return df
 
 #%%
-# Split crash_site in ISO and country, append to df
-
+# Split crash_site in ISO and country, append to df and drop na values
+df['Crash_location'].replace('USSR','Russia')
 df = country_ISO_miner(df, country_df, 'Crash_location')
+df.dropna(inplace=True)
 
+#%%
+df = passenger_splitter(df)
 
 
 #%%
 
-
-
-
-
+df[['total_passengers_num','passengers_alive','crew_alive']] = df['passengers_alive'].str.split('Â', expand=True)
+df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
+df['crew_alive'] = df['crew_alive'].str.split(':').str[-1]
+df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
+#%%
 
 
 
