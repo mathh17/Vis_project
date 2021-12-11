@@ -72,7 +72,7 @@ country_df = country_df.sort_values(by='country',ascending=False)
 
 #%%
 # Dataframe for all cities with population above 15.000
-cities_list = pd.read_csv('cities15000.txt', sep="\t", header=None)
+cities_list = pd.read_csv('cities5000.txt', sep="\t", header=None)
 cities_list = cities_list[[1,4,5,8]]
 cities_list.columns=['city_name','longitude','latitude','ISO']
 
@@ -183,8 +183,20 @@ df['Crash_location'].replace('USSR','Russia')
 df = country_ISO_miner(df, country_df, 'Crash_location')
 
 #%%
+import timeit
+start = timeit.default_timer()
+
 df = city_miner(df, cities_list, 'Crash_location')
+
+stop = timeit.default_timer()
+
+print('Time: ', stop - start)  
+
+df.to_csv('trimmed_crashes_city5k.csv')
+
 df.dropna(inplace=True)
+
+
 
 #%%
 # Call the function for splitting passengers alive dataframes and dead into seperate columns
