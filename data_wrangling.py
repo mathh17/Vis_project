@@ -12,7 +12,10 @@ import pycountry
 
 #Load data
 df = pd.read_excel('crashes.xlsx')
-
+df_trimmed_15k = pd.read_csv('trimmed_crashes.csv')
+df_trimmed_5k = pd.read_csv('trimmed_crashes_city5k.csv')
+df_trimmed_5k.dropna(inplace=True)
+df_trimmed_15k.dropna(inplace=True)
 #Drop columns of no interest
 df = df.drop(columns="Registration")
 df = df.drop(columns="Cn_ln")
@@ -200,9 +203,15 @@ df.dropna(inplace=True)
 
 #%%
 # Call the function for splitting passengers alive dataframes and dead into seperate columns
-df = passenger_splitter(df)
+df_trimmed_5k = passenger_splitter(df_trimmed_5k)
+df_trimmed_5k.drop(['onboard_alive','Onboard_fatalities_num'])
 #%%
+df_trimmed_5k = df_trimmed_5k.drop(columns=['onboard_alive','Onboard_fatalities_num'])
+#%%
+df_trimmed_5k = df_trimmed_5k.drop(df_trimmed_5k.columns[0], axis=1)
 
+#%%
+df_trimmed_5k.to_csv('trimmed_crashes_city5k.csv')
 
 
 
