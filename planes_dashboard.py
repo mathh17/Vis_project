@@ -7,7 +7,7 @@ from dash import html
 import plotly.express as px
 #%%
 
-data = pd.read_csv(r'Visualisering\Vis_project\crashes_to_visualize.csv')
+data = pd.read_csv(r'crashes_to_visualize.csv')
 data = data.drop(data.columns[0], axis=1)
 
 #%%
@@ -23,12 +23,28 @@ app = dash.Dash(__name__)
 mintime = 1900
 maxtime = 2030
 
+types = data['Organisation'].unique()
+type_options = [{'label': i, 'value': i} for i in types]
+type_options.append({'label': 'All organisations', 'value': 'all'})
+
+
 app.layout =html.Div([    
+                html.Div([
+                   dcc.Dropdown(
+                       id='organisation',
+                       options=type_options,
+                       value='all',
+                       #multi = True,
+                       style={'width':'50%','display':'inline-block'}
+                   )
+                ],style={'width':'100%','display':'inline-block'}),
+    
                 html.Div([
                      html.Div([
                          dcc.Graph(id='crash-map')
                      ],style={'width':'46%','display':'inline-block','vertical-align':'top','margin':'2%'})
                  ]),
+                
                  html.Div([
                      dcc.RangeSlider(
                        id='time-slider',
@@ -44,13 +60,17 @@ app.layout =html.Div([
 @app.callback(
     Output(component_id='crash-map', component_property='figure'),
     [
-        #Input(component_id='Organisation', component_property='value'),
+        Input(component_id='organisation', component_property='value'),
         #Input(component_id='volcano_rocks', component_property='value'),
         Input(component_id='time-slider', component_property='value')
     ]
 )
-def update_output(time):
+
+def update_output(time, organisation):
     mydata = data
+    if organisation != 'all':
+       mydata = data[data['Organisation'] == organisation]
+        
     fig = px.scatter_mapbox(data_frame=mydata, 
                         lat=long,
                         lon=lat,
@@ -61,7 +81,7 @@ def update_output(time):
                                     "Year",
                                     "Ac_type"],
                         color='Total dead',
-                        color_continuous_scale=px.colors.sequential.Bluered,
+                        color_continuous_scale='magma',
                         size='Total dead',
                         size_max=20,
                         zoom=1,
@@ -72,5 +92,6 @@ def update_output(time):
     fig.update_layout(mapbox_style='carto-positron', autosize=False)
     fig.update_layout(margin={"r":0,"t":0,"l":20,"b":0})
     return fig
+
 if __name__ == '__main__':
     app.run_server(debug=True, port=8080)
