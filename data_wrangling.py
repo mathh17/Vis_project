@@ -297,6 +297,7 @@ df['crew_alive'] = df['crew_alive'].str.split(':').str[-1]
 df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
 
 df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
+df.rename(columns={"total_passengers_num": "Total onboard", "passengers_alive": "Passengers onboard", "crew_alive": "Crew onboard", "total_passengers_dead": "Total dead", "passengers_dead": "Passengers dead", "crew_dead": "Crew dead"})
 #%%
 countries = []
 countries.append(pycountry.countries)
