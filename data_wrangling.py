@@ -7,18 +7,15 @@ Created on Fri Dec  3 11:10:10 2021''
 #%%
 
 #import libraries
+import numpy as np
 import pandas as pd
 import pycountry 
 
 #Load data
 df = pd.read_excel('crashes.xlsx')
-
 #Drop columns of no interest
 df = df.drop(columns="Registration")
 df = df.drop(columns="Cn_ln")
-
-#%%
-# Mutate data in df to eliminate undesireable notations
 
 
 #%%
@@ -61,7 +58,32 @@ country_df['country'] = country_list
 country_df['ISO'] = iso_list
 
 # Tilføjer amrikanske stater til country og ISO list + District of Columbia
-state_names = pd.DataFrame([["Alaska", 'US'], ["Alabama", 'US'], ["Arkansas", 'US'], ["Arizona", 'US'], ["California", 'US'], ["Colorado", 'US'], ["Connecticut", 'US'], ["D.C.", 'US'], ["Delaware", 'US'], ["Florida", 'US'], ["Georgia", 'US'], ["Hawaii", 'US'], ["Iowa", 'US'], ["Idaho", 'US'], ["Illinois", 'US'], ["Indiana", 'US'], ["Kansas", 'US'], ["Kentucky", 'US'], ["Louisiana", 'US'], ["Massachusetts", 'US'], ["Maryland", 'US'], ["Maine", 'US'], ["Michigan", 'US'], ["Minnesota", 'US'], ["Missouri", 'US'], ["Mississippi", 'US'], ["Montana", 'US'], ["North Carolina", 'US'], ["North Dakota", 'US'], ["Nebraska", 'US'], ["New Hampshire", 'US'], ["New Jersey", 'US'], ["New Mexico", 'US'], ["Nevada", 'US'], ["New York", 'US'], ["Ohio", 'US'], ["Oklahoma", 'US'], ["Oregon", 'US'], ["Pennsylvania", 'US'], ["Rhode Island", 'US'], ["South Carolina", 'US'], ["South Dakota", 'US'], ["Tennessee", 'US'], ["Texas", 'US'], ["Utah", 'US'], ["Virginia", 'US'], ["Vermont", 'US'], ["Washington", 'US'], ["Wisconsin", 'US'], ["West Virginia", 'US'], ["Wyoming", 'US']], columns=['country', 'ISO'])
+state_names = pd.DataFrame([["Alaska", 'US'], ["Alabama", 'US'], 
+                            ["Arkansas", 'US'], ["Arizona", 'US'], 
+                            ["California", 'US'], ["Colorado", 'US'], 
+                            ["Connecticut", 'US'], ["D.C.", 'US'], 
+                            ["Delaware", 'US'], ["Florida", 'US'], 
+                            ["Georgia", 'US'], ["Hawaii", 'US'], 
+                            ["Iowa", 'US'], ["Idaho", 'US'], 
+                            ["Illinois", 'US'], ["Indiana", 'US'], 
+                            ["Kansas", 'US'], ["Kentucky", 'US'], 
+                            ["Louisiana", 'US'], ["Massachusetts", 'US'], 
+                            ["Maryland", 'US'], ["Maine", 'US'], 
+                            ["Michigan", 'US'], ["Minnesota", 'US'], 
+                            ["Missouri", 'US'], ["Mississippi", 'US'], 
+                            ["Montana", 'US'], ["North Carolina", 'US'], 
+                            ["North Dakota", 'US'], ["Nebraska", 'US'], 
+                            ["New Hampshire", 'US'], ["New Jersey", 'US'], 
+                            ["New Mexico", 'US'], ["Nevada", 'US'], 
+                            ["New York", 'US'], ["Ohio", 'US'], 
+                            ["Oklahoma", 'US'], ["Oregon", 'US'], 
+                            ["Pennsylvania", 'US'], ["Rhode Island", 'US'], 
+                            ["South Carolina", 'US'], ["South Dakota", 'US'], 
+                            ["Tennessee", 'US'], ["Texas", 'US'], 
+                            ["Utah", 'US'], ["Virginia", 'US'], 
+                            ["Vermont", 'US'], ["Washington", 'US'], 
+                            ["Wisconsin", 'US'], ["West Virginia", 'US'], 
+                            ["Wyoming", 'US']], columns=['country', 'ISO'])
 
 country_df = country_df.append(state_names)
 
@@ -71,12 +93,10 @@ country_df = country_df.sort_values(by='country',ascending=False)
 
 
 #%%
-# Dataframe for all cities with population above 15.000
+# Dataframe for all cities with population above 5.000
 cities_list = pd.read_csv('cities5000.txt', sep="\t", header=None)
 cities_list = cities_list[[1,4,5,8]]
 cities_list.columns=['city_name','longitude','latitude','ISO']
-
-
 
 
 #%%
@@ -177,143 +197,98 @@ def passenger_splitter(df):
     df['crew_dead'] = df['crew_dead'].str.split(')').str[0]
     return df
 
+
+
 #%%
 # Split crash_site in ISO and country, append to df and drop na values
 df['Crash_location'].replace('USSR','Russia')
 df = country_ISO_miner(df, country_df, 'Crash_location')
 
+
+
 #%%
-import timeit
-start = timeit.default_timer()
+# Get crash city and coordinates for crash sites
 
 df = city_miner(df, cities_list, 'Crash_location')
-
-stop = timeit.default_timer()
-
-print('Time: ', stop - start)  
-
 df.to_csv('trimmed_crashes_city5k.csv')
 
-df.dropna(inplace=True)
 
+
+# #%%
+
+# df_trimmed_15k = pd.read_csv('trimmed_crashes.csv')
+# df_trimmed_5k = pd.read_csv('trimmed_crashes_city5k.csv')
+# #df_trimmed_5k.dropna(inplace=True) #Commented out, gjort da passengers revideres mandag d.13
+# df_trimmed_15k.dropna(inplace=True)
 
 
 #%%
 # Call the function for splitting passengers alive dataframes and dead into seperate columns
 df = passenger_splitter(df)
-#%%
-
-
-
-
-
-
-
-
-
-
-
+df.drop(['onboard_alive','Onboard_fatalities_num'])
+df = df.drop(columns=['onboard_alive','Onboard_fatalities_num'])
+df = df.drop(df.columns[0], axis=1)
 
 
 #%%
-# The old loop, MAthias x Jakob
-###
-valid_index = []
-crash_ISO = []
-crash_country = []
-i = 0
+# Turn all dataset '?' into None, and add total fatalities and survivor counts
 
-for index_df, row_df in df.iterrows():
-    #print(i)
-    for index, row in country_df.iterrows():
-        if row['country'] in str(row_df['Crash_location']).replace(',', ''):
-            crash_ISO.append(row['ISO'])
-            crash_country.append(row['country'])
-            valid_index.append(i)
-            print('NAME activated INDEX:',index_df)
-            break
-        elif row['ISO'] in str(row_df['Crash_location']).replace(',', ''):
-            crash_ISO.append(row['ISO'])
-            crash_country.append(row['country'])
-            valid_index.append(i)
-            print('ISO activated INDEX:',index_df)
-            break
-    i +=1
-print(valid_index)
+######################################################################################################################
+df = pd.read_csv('trimmed_crashes_city5k.csv')
+######################################################################################################################
+
+df_org = df
+
+df = df.rename(columns={"total_passengers_num": "Total onboard", 
+                        "passengers_alive": "Passengers onboard", 
+                        "crew_alive": "Crew onboard", 
+                        "total_passengers_dead": "Total dead", 
+                        "passengers_dead": "Passengers dead", 
+                        "crew_dead": "Crew dead"})
 
 
-#%%
-
-valid_index = []
-crash_ISO = []
-crash_country = []
-i = 0
-
-dfc = df.copy(deep=True)
+df['Summary'] = df['Summary'].replace('?', 'Summary unavailable.')
+df = df.replace('?', None)
+df = df.replace('? ', None)
 
 
-for index_df, row_df in dfc.iterrows():
-    nan_applier = True
-    #print(i)
-    for index, row in country_df.iterrows():
-        if row['country'] in str(row_df['Crash_location']).replace(',', ''):
-            crash_ISO.append(row['ISO'])
-            crash_country.append(row['country'])
-            valid_index.append(i)
-            print('NAME activated INDEX:',index_df)
-            nan_applier = False
-            break
-        else:
-            word_list = []
-            #e=0
-            sentence = str(row_df['Crash_location']).replace(',', '')
-            word_list.append(sentence.split(' '))
-            if row['ISO'] in word_list:                
-                crash_ISO.append(row['ISO'])
-                crash_country.append(row['country'])
-                valid_index.append(i)
-                print('ISO activated INDEX:',index_df)
-                nan_applier = False
-                break
-    if nan_applier == True:        
-        crash_ISO.append(None)
-        crash_country.append(None)
-        valid_index.append(None)
-    
-    i +=1
-print(valid_index)
+df ["Total onboard"] = df["Total onboard"].astype(int)
+df ["Passengers onboard"]= df["Passengers onboard"].astype(int)
+df ["Crew onboard"]= df["Crew onboard"].astype(int)
+df ["Total dead"]= df["Total dead"].astype(int)
+df ["Passengers dead"]= df["Passengers dead"].astype(int)
+df ["Crew dead"]= df["Crew dead"].astype(int)
 
-dfc['Crash_country'] = crash_country
-dfc['Crash_ ISO'] = crash_ISO
+
+tot_surv_column = df["Total onboard"] - df["Total dead"]
+pas_surv_column = df["Passengers onboard"] - df["Passengers dead"]
+crew_surv_column = df["Crew onboard"] - df["Crew dead"]
+
+
+df["Total survivors"] = tot_surv_column
+df["Passengers survivors"] = pas_surv_column
+df["Crew survivors"] = crew_surv_column
+
 
 
 #%%
-#
-df[['Cr_city', 'Cr_country']] = df['Crash_location'].str.split(', ', 1, expand=True)
-df[['Cr_region', 'Cr_country']] = df['Cr_country'].str.split(', ', 1, expand=True)
-df[['total_passengers_num','passengers_alive','crew_alive']] = df['Passenegrs_num'].str.split('Â', expand=True)
-df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
-df['crew_alive'] = df['crew_alive'].str.split(':').str[-1]
-df['crew_alive'] = df['crew_alive'].str.split(')').str[0]
+# Trim out invalid splits on numnber of people onboard aircraft
+
+df['error'] = np.where((df['Total onboard'] >= (df['Passengers onboard'] + df['Crew onboard']))
+                     , 'valid', 'invalid')
+
+df = df[df.error == 'valid']
+df = df.drop(columns=['error'])
+
+
+
+#%%
+# Save wrangled dataset.
 
 df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
 df.rename(columns={"total_passengers_num": "Total onboard", "passengers_alive": "Passengers onboard", "crew_alive": "Crew onboard", "total_passengers_dead": "Total dead", "passengers_dead": "Passengers dead", "crew_dead": "Crew dead"})
 #%%
 countries = []
 countries.append(pycountry.countries)
-
-print(countries)
-
-#%%
-#Print statement for all collumn uniques and count of number of collumn variables
-for col in df:
-    print('For column',col,'number of uniques are:')
-    print(len(df[col].value_counts(dropna=False)))
-    print('-The uniques are:')
-    print(df[col].unique())
-    print('...')
-
-
-# %%
-#df.to_excel('Wrangled_data.xlsx')
+df.to_csv('crashes_to_visualize.csv')
 
