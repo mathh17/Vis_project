@@ -7,8 +7,8 @@ from dash import html
 import plotly.express as px
 import json
 #%%
-
-data = pd.read_csv(r'Visualisering\Vis_project\crashes_to_visualize.csv')
+#data = pd.read_csv('crashes_to_visualize.csv') #Jupyter
+data = pd.read_csv(r'Visualisering\Vis_project\crashes_to_visualize.csv') #Dash
 data = data.drop(data.columns[0], axis=1)
 
 #%%
@@ -62,7 +62,7 @@ def click_updater(click_data):
         custom_data
         fig_2 = px.pie(data_frame=click_data, 
                 values=[custom_data[6],custom_data[7],custom_data[8],custom_data[9],custom_data[10]], 
-                names=['Dead passengers','Dead crew','Passengers','Crew','People killed on ground'],
+                names=['Dead passengers','Dead crew','Surviving passengers','Surviving crew','People killed on ground'],
                 title='DEAD')
     return fig_2
 
@@ -100,13 +100,13 @@ def update_output(time, organisation):
                                     'Ground_fatalities_num'],
                         color='Total dead',
                         color_continuous_scale='magma',
-                        size='Total dead',
-                        size_max=20,
+                        size=[max(10, i) for i in mydata['Total dead']],
+                        size_max=30,
                         zoom=1,
                         width = 1200,
                         height=800)
     #print("plotly express hovertemplate:", fig_1.data[0].hovertemplate)
-    fig_1.update_traces(hovertemplate = "<br>Organisation: %{customdata[0]}<br>Country: %{customdata[1]}<br>City: %{customdata[2]}<br>Date: %{customdata[3]} %{customdata[4]}<br>Aircraft type: %{customdata[5]}<extra></extra>")
+    fig_1.update_traces(hovertemplate = "<br>Organisation: %{customdata[0]}<br>Country/State: %{customdata[1]}<br>City: %{customdata[2]}<br>Date: %{customdata[3]} %{customdata[4]}<br>Aircraft type: %{customdata[5]}<extra></extra>")
     fig_1.update_layout(mapbox_style='carto-positron', autosize=False)
     fig_1.update_layout(margin={"r":0,"t":0,"l":20,"b":0})
     
