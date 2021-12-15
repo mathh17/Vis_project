@@ -281,10 +281,8 @@ df = df.drop(columns=['error'])
 
 #%%
 # Split colum Date into Date and Month
-df = pd.read_csv('crashes_to_visualize.csv')
 
 df[['Month','Date']] = df.Date.str.split(' ', expand = True)
-
 
 
 
