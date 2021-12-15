@@ -26,27 +26,33 @@ maxtime = data['Year'].max()
 
 types = data['Organisation'].unique()
 type_options = [{'label': i, 'value': i} for i in types]
-type_options.append({'label': 'All organisations', 'value': 'all'})
 
 app.layout =html.Div([
                 html.H1(children="The World's Plane Crashes",
                          style = {'textAlign':'center', 'font-family' : 'Roboto'}),    
-                html.Div([dcc.Dropdown(
+                html.Div([
+                        html.Div([
+                            dcc.Graph(id='crash-map',style={"width":"40%","display":"block"}),
+                            dcc.Dropdown(
                             id='organisation',
                             options=type_options,
-                            value='all',
-                            #multi = True,
-                            style={'width':'50%','margin-left':'10px'}),
-                            dcc.Graph(id='crash-map'),
+                            value=[],
+                            multi = True,
+                            style={'width':'900px','margin-left':'10px',"margin-top":"10px","display":"block"}),
+                        html.Div([
                             dcc.RangeSlider(
                             id='time-slider',
                             min=mintime,
                             max=maxtime,
                             step=1,
                             value=[mintime,maxtime],
-                            tooltip={"placement": "bottom", "always_visible": True}),
-                            dcc.Graph(id='pie_chart',style={'width':'20%'}),
-                            html.P(id='Summary_area',style={'width':'30%'})],style={'display':'block', "position":"relative"})
+                            tooltip={"placement": "bottom", "always_visible": True})],style={"width":"950px","display":"block"})],style={"display":"inline"}),
+                        html.Div([
+                            dcc.Graph(id='org_chart',style={'margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
+                            dcc.Graph(id='death_chart',style={'margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
+                            dcc.Graph(id='pie_chart',style={'width':'40%','margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
+                            html.P(id='Summary_area',style={'width':'30%','float':'right','margin-right':'250px',"display":"inline-block"})],style={"margin-top":"-650px","position":"absolute"}),
+                ])
 ])
     
 @app.callback(
@@ -80,7 +86,8 @@ def click_updater(click_data):
 
 @app.callback(
     Output(component_id='crash-map', component_property='figure'),
-    #Output(component_id='pie_chart', component_property='figure'),
+    Output(component_id='death_chart', component_property='figure'),
+    Output(component_id='org_chart', component_property='figure'),
     [
         Input(component_id='time-slider', component_property='value'),
         Input(component_id='organisation', component_property='value'),
@@ -90,8 +97,12 @@ def click_updater(click_data):
 
 def update_output(time, organisation):
     mydata = data
+    mydata['crash_count'] = 1
+    print(organisation)
     if organisation != 'all':
-       mydata = data[data['Organisation'] == organisation]
+        mydata = mydata[mydata['Organisation'].isin(organisation)]
+    if len(organisation) == 0:
+        mydata = data
     if time != [mintime,maxtime]:
         mydata = mydata[mydata['Year'] >= time[0]]
         mydata = mydata[mydata['Year'] <= time[1]]
@@ -109,20 +120,37 @@ def update_output(time, organisation):
                                     'Passengers survivors',
                                     'Crew survivors',
                                     'Ground_fatalities_num',
-                                    'Summary'],
+                                    'Summary',
+                                    "Month",],
                         color='Total dead',
                         color_continuous_scale='magma',
                         size=[max(10, i) for i in mydata['Total dead']],
                         size_max=30,
                         zoom=1,
                         width = 1000,
-                        height=800)
+                        height=600)
     #print("plotly express hovertemplate:", fig_1.data[0].hovertemplate)
-    fig_1.update_traces(hovertemplate = "<br>Organisation: %{customdata[0]}<br>Country/State: %{customdata[1]}<br>City: %{customdata[2]}<br>Date: %{customdata[3]} %{customdata[4]}<br>Aircraft type: %{customdata[5]}<extra></extra>")
+    fig_1.update_traces(hovertemplate = "<br>Organisation: %{customdata[0]}<br>Country/State: %{customdata[1]}<br>City: %{customdata[2]}<br>Date: %{customdata[3]} %{customdata[12]} %{customdata[4]}<br>Aircraft type: %{customdata[5]}<extra></extra>")
     fig_1.update_layout(mapbox_style='carto-positron', autosize=False)
     fig_1.update_layout(margin={"r":0,"t":0,"l":20,"b":0})
-    
-    return fig_1
+    fig_2 = px.histogram(mydata,
+                        x="Year",
+                        nbins=time[1]-time[0],
+                        y=['Passengers dead',
+                            'Crew dead',
+                            'Passengers survivors',
+                            'Crew survivors',
+                            'Ground_fatalities_num'], 
+                        title='booba',
+                        height=300)
+    fig_3 = px.histogram(mydata,
+                        x="Year",
+                        nbins=time[1]-time[0],
+                        y=['crash_count'],
+                        color='Organisation', 
+                        title='booba',
+                        height=300)
+    return fig_1, fig_2, fig_3
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8080)
