@@ -1,4 +1,5 @@
 #%%
+from numpy import absolute
 import pandas as pd
 import dash
 from dash.dependencies import Input, Output
@@ -30,41 +31,51 @@ type_options.append({'label': 'All organisations', 'value': 'all'})
 app.layout =html.Div([
                 html.H1(children="The World's Plane Crashes",
                          style = {'textAlign':'center', 'font-family' : 'Roboto'}),    
-                html.Div([
-                        html.Div([
-                            dcc.Dropdown(
+                html.Div([dcc.Dropdown(
                             id='organisation',
                             options=type_options,
                             value='all',
                             #multi = True,
-                            style={'width':'50%','display':'inline-block'}),
-                         dcc.Graph(id='crash-map'),
-                         dcc.RangeSlider(
+                            style={'width':'50%','margin-left':'10px'}),
+                            dcc.Graph(id='crash-map'),
+                            dcc.RangeSlider(
                             id='time-slider',
                             min=mintime,
                             max=maxtime,
                             step=1,
                             value=[mintime,maxtime],
                             tooltip={"placement": "bottom", "always_visible": True}),
-                        dcc.Graph(id='pie_chart')
-                    ],style={'width':'62%','display':'inline-block','vertical-align':'top','margin':'2%'})
-                     ]),
-                 ])
+                            dcc.Graph(id='pie_chart',style={'width':'20%'}),
+                            html.P(id='Summary_area',style={'width':'30%'})],style={'display':'block', "position":"relative"})
+])
     
-@app.callback(Output('pie_chart','figure'),
+@app.callback(
+    Output('pie_chart','figure'),
+    Output('Summary_area', 'children'),
     [
-        Input('crash-map','clickData'),        
+        Input('crash-map','clickData'),
     ])
 def click_updater(click_data):
-    if click_data != None:
 
+    
+    if click_data != None:
         custom_data = click_data['points'][0]['customdata']
-        custom_data
+        summary_text = custom_data[11]
         fig_2 = px.pie(data_frame=click_data, 
-                values=[custom_data[6],custom_data[7],custom_data[8],custom_data[9],custom_data[10]], 
-                names=['Dead passengers','Dead crew','Surviving passengers','Surviving crew','People killed on ground'],
-                title='DEAD')
-    return fig_2
+                values=[custom_data[6],
+                custom_data[7],
+                custom_data[8],
+                custom_data[9],
+                custom_data[10]],
+                names= ['Dead passengers','Dead crew','Surviving passengers','Surviving crew','People killed on ground'],
+                color=['Dead passengers','Dead crew','Surviving passengers','Surviving crew','People killed on ground'],
+                title='Casualities',
+                color_discrete_map={'Dead passengers':'#e74127',
+                'Dead crew':'#e77a27',
+                'Surviving passengers':'#91e842',
+                'Surviving crew':'#14a338',
+                'People killed on ground':'#a51f12'})
+    return fig_2, summary_text
 
 
 @app.callback(
@@ -97,13 +108,14 @@ def update_output(time, organisation):
                                     'Crew dead',
                                     'Passengers survivors',
                                     'Crew survivors',
-                                    'Ground_fatalities_num'],
+                                    'Ground_fatalities_num',
+                                    'Summary'],
                         color='Total dead',
                         color_continuous_scale='magma',
                         size=[max(10, i) for i in mydata['Total dead']],
                         size_max=30,
                         zoom=1,
-                        width = 1200,
+                        width = 1000,
                         height=800)
     #print("plotly express hovertemplate:", fig_1.data[0].hovertemplate)
     fig_1.update_traces(hovertemplate = "<br>Organisation: %{customdata[0]}<br>Country/State: %{customdata[1]}<br>City: %{customdata[2]}<br>Date: %{customdata[3]} %{customdata[4]}<br>Aircraft type: %{customdata[5]}<extra></extra>")
