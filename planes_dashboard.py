@@ -1,15 +1,15 @@
 #%%
-from numpy import absolute
+#from numpy import absolute
 import pandas as pd
 import dash
 from dash.dependencies import Input, Output
 from dash import dcc
 from dash import html
 import plotly.express as px
-import json
+#import json
 #%%
 #data = pd.read_csv('crashes_to_visualize.csv') #Jupyter
-data = pd.read_csv(r'Visualisering\Vis_project\crashes_to_visualize.csv') #Dash
+data = pd.read_csv(r'crashes_to_visualize.csv') #Dash
 data = data.drop(data.columns[0], axis=1)
 
 #%%
@@ -61,9 +61,7 @@ app.layout =html.Div([
     [
         Input('crash-map','clickData'),
     ])
-def click_updater(click_data):
-
-    
+def click_updater(click_data): 
     if click_data != None:
         custom_data = click_data['points'][0]['customdata']
         summary_text = custom_data[11]
@@ -96,6 +94,7 @@ def click_updater(click_data):
 )
 
 def update_output(time, organisation):
+    print(organisation)
     mydata = data
     mydata['crash_count'] = 1
     print(organisation)
