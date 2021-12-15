@@ -233,9 +233,6 @@ df = df.drop(df.columns[0], axis=1)
 #%%
 # Turn all dataset '?' into None, and add total fatalities and survivor counts
 
-######################################################################################################################
-df = pd.read_csv('trimmed_crashes_city5k.csv')
-######################################################################################################################
 
 df_org = df
 
@@ -272,7 +269,7 @@ df["Crew survivors"] = crew_surv_column
 
 
 #%%
-# Trim out invalid splits on numnber of people onboard aircraft
+# Trim out invalid splits on number of people onboard aircraft
 
 df['error'] = np.where((df['Total onboard'] >= (df['Passengers onboard'] + df['Crew onboard']))
                      , 'valid', 'invalid')
@@ -283,13 +280,33 @@ df = df.drop(columns=['error'])
 
 
 #%%
+# Split colum Date into Date and Month
+df = pd.read_csv('crashes_to_visualize.csv')
+
+df[['Month','Date']] = df.Date.str.split(' ', expand = True)
+
+
+
+
+#%%
 # Save wrangled dataset.
 
-df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
-df.rename(columns={"total_passengers_num": "Total onboard", "passengers_alive": "Passengers onboard", "crew_alive": "Crew onboard", "total_passengers_dead": "Total dead", "passengers_dead": "Passengers dead", "crew_dead": "Crew dead"})
-#%%
-countries = []
-countries.append(pycountry.countries)
 df.to_csv('crashes_to_visualize.csv')
 
-#comment
+
+
+
+
+
+
+
+#%%
+#Alelrede i ovenstående kode??????
+#df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
+#df.rename(columns={"total_passengers_num": "Total onboard", "passengers_alive": "Passengers onboard", "crew_alive": "Crew onboard", "total_passengers_dead": "Total dead", "passengers_dead": "Passengers dead", "crew_dead": "Crew dead"})
+#%%
+#???????????????????????????????????????????????????????
+#countries = []
+#countries.append(pycountry.countries)
+
+
