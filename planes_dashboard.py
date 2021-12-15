@@ -48,24 +48,27 @@ app.layout =html.Div([
                             value=[mintime,maxtime],
                             tooltip={"placement": "bottom", "always_visible": True})],style={"width":"950px","display":"block"})],style={"display":"inline"}),
                         html.Div([
-                            dcc.Graph(id='org_chart',style={'margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
-                            dcc.Graph(id='death_chart',style={'margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
-                            dcc.Graph(id='pie_chart',style={'width':'40%','margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
-                            html.P(id='Summary_area',style={'width':'30%','float':'right','margin-right':'250px',"display":"inline-block"})],style={"margin-top":"-650px","position":"absolute"}),
+                            dcc.Graph(id='org_chart',style={'width':'40%','margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
+                            dcc.Graph(id='death_chart',style={'width':'40%','margin-left':'1100px',"border":"2px solid","display":"inline-block"}),
+                            html.Div([
+                            html.P(id='crash_info'),
+                            dcc.Graph(id='pie_chart',style={}),
+                            html.P(id='Summary_area',style={'margin-left':'20px'})],style={'width':'40%','margin-left':'1100px',"border":"2px solid","display":"inline-block"})]
+                            ,style={'width':'400',"margin-top":"-830px","display":"block",'float':'right'}),
                 ])
 ])
     
 @app.callback(
     Output('pie_chart','figure'),
     Output('Summary_area', 'children'),
+    Output('crash_info', 'children'),
     [
         Input('crash-map','clickData'),
     ])
 def click_updater(click_data):
-
-    
     if click_data != None:
         custom_data = click_data['points'][0]['customdata']
+        trash_text = custom_data[7]
         summary_text = custom_data[11]
         fig_2 = px.pie(data_frame=click_data, 
                 values=[custom_data[6],
@@ -75,13 +78,13 @@ def click_updater(click_data):
                 custom_data[10]],
                 names= ['Dead passengers','Dead crew','Surviving passengers','Surviving crew','People killed on ground'],
                 color=['Dead passengers','Dead crew','Surviving passengers','Surviving crew','People killed on ground'],
-                title='Casualities',
+                title='Crash information',
                 color_discrete_map={'Dead passengers':'#e74127',
                 'Dead crew':'#e77a27',
                 'Surviving passengers':'#91e842',
                 'Surviving crew':'#14a338',
                 'People killed on ground':'#a51f12'})
-    return fig_2, summary_text
+    return fig_2, summary_text, trash_text
 
 
 @app.callback(
@@ -123,12 +126,12 @@ def update_output(time, organisation):
                                     'Summary',
                                     "Month",],
                         color='Total dead',
-                        color_continuous_scale='magma',
+                        color_continuous_scale='plasma_r',
                         size=[max(10, i) for i in mydata['Total dead']],
                         size_max=30,
                         zoom=1,
                         width = 1000,
-                        height=600)
+                        height=750)
     #print("plotly express hovertemplate:", fig_1.data[0].hovertemplate)
     fig_1.update_traces(hovertemplate = "<br>Organisation: %{customdata[0]}<br>Country/State: %{customdata[1]}<br>City: %{customdata[2]}<br>Date: %{customdata[3]} %{customdata[12]} %{customdata[4]}<br>Aircraft type: %{customdata[5]}<extra></extra>")
     fig_1.update_layout(mapbox_style='carto-positron', autosize=False)
