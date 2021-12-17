@@ -184,7 +184,6 @@ def city_miner(data, cities_list, col_target):
     
     return data_copy
 
-
 #Splits the columns of [onboard_alive,onboard_fatalities_num] into three new columns for both of them, total, passengers and crew
 def passenger_splitter(df):
     df[['total_passengers_num','passengers_alive','crew_alive']] = df['onboard_alive'].str.split('Â', expand=True)
@@ -197,14 +196,10 @@ def passenger_splitter(df):
     df['crew_dead'] = df['crew_dead'].str.split(')').str[0]
     return df
 
-
-
 #%%
 # Split crash_site in ISO and country, append to df and drop na values
 df['Crash_location'].replace('USSR','Russia')
 df = country_ISO_miner(df, country_df, 'Crash_location')
-
-
 
 #%%
 # Get crash city and coordinates for crash sites
@@ -212,14 +207,8 @@ df = country_ISO_miner(df, country_df, 'Crash_location')
 df = city_miner(df, cities_list, 'Crash_location')
 df.to_csv('trimmed_crashes_city5k.csv')
 
-
-
-# #%%
-
-# df_trimmed_15k = pd.read_csv('trimmed_crashes.csv')
-# df_trimmed_5k = pd.read_csv('trimmed_crashes_city5k.csv')
-# #df_trimmed_5k.dropna(inplace=True) #Commented out, gjort da passengers revideres mandag d.13
-# df_trimmed_15k.dropna(inplace=True)
+#%%
+df = pd.read_csv('crashes_to_visualize.csv')
 
 
 #%%
@@ -239,15 +228,20 @@ df_org = df
 df = df.rename(columns={"total_passengers_num": "Total onboard", 
                         "passengers_alive": "Passengers onboard", 
                         "crew_alive": "Crew onboard", 
-                        "total_passengers_dead": "Total dead", 
+                        "Total dead": "Onboard deaths", 
                         "passengers_dead": "Passengers dead", 
                         "crew_dead": "Crew dead"})
 
+#%%
+df["all deaths"] = df["Onboard deaths"] + df["Ground_fatalities_num"]
+#%%
+
+#%%
 
 df['Summary'] = df['Summary'].replace('?', 'Summary unavailable.')
 df = df.replace('?', None)
 df = df.replace('? ', None)
-
+#%%
 
 df ["Total onboard"] = df["Total onboard"].astype(int)
 df ["Passengers onboard"]= df["Passengers onboard"].astype(int)
@@ -255,7 +249,7 @@ df ["Crew onboard"]= df["Crew onboard"].astype(int)
 df ["Total dead"]= df["Total dead"].astype(int)
 df ["Passengers dead"]= df["Passengers dead"].astype(int)
 df ["Crew dead"]= df["Crew dead"].astype(int)
-
+#%%
 
 tot_surv_column = df["Total onboard"] - df["Total dead"]
 pas_surv_column = df["Passengers onboard"] - df["Passengers dead"]
@@ -277,34 +271,12 @@ df['error'] = np.where((df['Total onboard'] >= (df['Passengers onboard'] + df['C
 df = df[df.error == 'valid']
 df = df.drop(columns=['error'])
 
-
-
 #%%
 # Split colum Date into Date and Month
 
 df[['Month','Date']] = df.Date.str.split(' ', expand = True)
 
-
-
 #%%
 # Save wrangled dataset.
 
 df.to_csv('crashes_to_visualize.csv')
-
-
-
-
-
-
-
-
-#%%
-#Alelrede i ovenstående kode??????
-#df = df.drop(columns= ['Crash_location','Route','Passenegrs_num'])
-#df.rename(columns={"total_passengers_num": "Total onboard", "passengers_alive": "Passengers onboard", "crew_alive": "Crew onboard", "total_passengers_dead": "Total dead", "passengers_dead": "Passengers dead", "crew_dead": "Crew dead"})
-#%%
-#???????????????????????????????????????????????????????
-#countries = []
-#countries.append(pycountry.countries)
-
-
