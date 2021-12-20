@@ -16,6 +16,9 @@ df = pd.read_excel('crashes.xlsx')
 #Drop columns of no interest
 df = df.drop(columns="Registration")
 df = df.drop(columns="Cn_ln")
+# Split colum Date into Date and Month
+df[['Month','Date']] = df.Date.str.split(' ', expand = True)
+
 
 
 #%%
@@ -53,11 +56,11 @@ country_list[229] = 'Tanzania'
 country_list[238] = 'Venezuela'
 country_list[241] = 'Vietnam'
 
-# Create Country and ISO dataframe
+# Create Country and ISO dataframe for use in trimming loops
 country_df['country'] = country_list
 country_df['ISO'] = iso_list
 
-# Tilføjer amrikanske stater til country og ISO list + District of Columbia
+# Add amercan states to country and ISO lists + District of Columbia
 state_names = pd.DataFrame([["Alaska", 'US'], ["Alabama", 'US'], 
                             ["Arkansas", 'US'], ["Arizona", 'US'], 
                             ["California", 'US'], ["Colorado", 'US'], 
@@ -99,10 +102,13 @@ cities_list = cities_list[[1,4,5,8]]
 cities_list.columns=['city_name','longitude','latitude','ISO']
 
 
+
 #%%
+# Function definitions
+#
 # Function: 
 #    Iterate and get crash country name and ISO code. Append to df. 
-###
+###########
 
 def country_ISO_miner(data, country_iso_df, col_target):
     data_copy = data.copy()
@@ -147,6 +153,10 @@ def country_ISO_miner(data, country_iso_df, col_target):
     
     return data_copy
 
+# Function: 
+#    Iterate and match cities to countries, append coordiantes
+###########
+
 def city_miner(data, cities_list, col_target):
     data_copy = data.copy()
     city_list = []
@@ -184,7 +194,11 @@ def city_miner(data, cities_list, col_target):
     
     return data_copy
 
-#Splits the columns of [onboard_alive,onboard_fatalities_num] into three new columns for both of them, total, passengers and crew
+# Function: 
+#          Splits the columns of [onboard_alive,onboard_fatalities_num] into 
+#           three new columns for both of them, total, passengers and crew 
+###########
+
 def passenger_splitter(df):
     df[['total_passengers_num','passengers_alive','crew_alive']] = df['onboard_alive'].str.split('Â', expand=True)
     df['passengers_alive'] = df['passengers_alive'].str.split(':').str[-1]
@@ -196,65 +210,63 @@ def passenger_splitter(df):
     df['crew_dead'] = df['crew_dead'].str.split(')').str[0]
     return df
 
+
+
 #%%
+# Apply functions to get crash location country, cities and coordiantes
+
 # Split crash_site in ISO and country, append to df and drop na values
-df['Crash_location'].replace('USSR','Russia')
+df['Crash_location'].replace('USSR','Russia') #replace USSR with Russia in data
 df = country_ISO_miner(df, country_df, 'Crash_location')
 
-#%%
+
 # Get crash city and coordinates for crash sites
-
 df = city_miner(df, cities_list, 'Crash_location')
-df.to_csv('trimmed_crashes_city5k.csv')
 
-#%%
-df = pd.read_csv('crashes_to_visualize.csv')
 
 
 #%%
-# Call the function for splitting passengers alive dataframes and dead into seperate columns
+# Wrangle the counts of fatalitites and mine new insights
+
+# Splitting onboard counts of crew and passengers
 df = passenger_splitter(df)
-df.drop(['onboard_alive','Onboard_fatalities_num'])
 df = df.drop(columns=['onboard_alive','Onboard_fatalities_num'])
-df = df.drop(df.columns[0], axis=1)
 
+# Replace unknown values with None
+df['Summary'] = df['Summary'].replace('?', 'Summary unavailable.')
 
-#%%
-# Turn all dataset '?' into None, and add total fatalities and survivor counts
-
-
-df_org = df
-
+# and rename the new columns
 df = df.rename(columns={"total_passengers_num": "Total onboard", 
                         "passengers_alive": "Passengers onboard", 
                         "crew_alive": "Crew onboard", 
-                        "Total dead": "Onboard deaths", 
+                        "total_passengers_dead": "Onboard deaths", 
                         "passengers_dead": "Passengers dead", 
                         "crew_dead": "Crew dead"})
 
-#%%
-df["all deaths"] = df["Onboard deaths"] + df["Ground_fatalities_num"]
-#%%
-
-#%%
-
-df['Summary'] = df['Summary'].replace('?', 'Summary unavailable.')
+# replace lost values with None
 df = df.replace('?', None)
 df = df.replace('? ', None)
-#%%
 
+#drop all entries in data with NA values
+df = df.dropna()
+
+# and typecast entries of fatalitites and survivors to integers
 df ["Total onboard"] = df["Total onboard"].astype(int)
 df ["Passengers onboard"]= df["Passengers onboard"].astype(int)
 df ["Crew onboard"]= df["Crew onboard"].astype(int)
-df ["Total dead"]= df["Total dead"].astype(int)
+df ["Onboard deaths"]= df["Onboard deaths"].astype(int)
 df ["Passengers dead"]= df["Passengers dead"].astype(int)
 df ["Crew dead"]= df["Crew dead"].astype(int)
-#%%
+df["Ground_fatalities_num"] = df["Ground_fatalities_num"].astype(int)
 
-tot_surv_column = df["Total onboard"] - df["Total dead"]
+
+#and concatenate for a summed death count in a new column
+df["all deaths"] = df["Onboard deaths"] + df["Ground_fatalities_num"]
+
+#Finally calculate the total number of survivors
+tot_surv_column = df["Total onboard"] - df["Onboard deaths"]
 pas_surv_column = df["Passengers onboard"] - df["Passengers dead"]
 crew_surv_column = df["Crew onboard"] - df["Crew dead"]
-
 
 df["Total survivors"] = tot_surv_column
 df["Passengers survivors"] = pas_surv_column
@@ -263,20 +275,24 @@ df["Crew survivors"] = crew_surv_column
 
 
 #%%
+# Trimming invalid row entries
+
 # Trim out invalid splits on number of people onboard aircraft
 
 df['error'] = np.where((df['Total onboard'] >= (df['Passengers onboard'] + df['Crew onboard']))
                      , 'valid', 'invalid')
-
 df = df[df.error == 'valid']
 df = df.drop(columns=['error'])
 
-#%%
-# Split colum Date into Date and Month
+#Trim out counts on fatalities ans survivors where the value is negative
+df = df.drop(df[df['Total survivors'] < 0].index)
+df = df.drop(df[df['Passengers survivors'] < 0].index)
+df = df.drop(df[df['Crew survivors'] < 0].index)
 
-df[['Month','Date']] = df.Date.str.split(' ', expand = True)
+
 
 #%%
 # Save wrangled dataset.
-
 df.to_csv('crashes_to_visualize.csv')
+
+
