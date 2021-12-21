@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Dec  3 11:10:10 2021''
-
-@author: Konsulenten
-"""
 #%%
 
 #import libraries
