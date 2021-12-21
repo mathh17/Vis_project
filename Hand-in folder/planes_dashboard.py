@@ -7,9 +7,7 @@ from dash import dcc
 from dash import html
 import plotly.express as px
 import sys
-#import json
 #%%
-#data = pd.read_csv('crashes_to_visualize.csv') #Jupyter
 path = sys.path
 data = pd.read_csv(path[0]+'\\crashes_to_visualize.csv') #Dash
 data = data.drop(data.columns[0], axis=1)
